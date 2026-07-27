@@ -1,10 +1,9 @@
 name: Run Global Crawler
 
 on:
+  workflow_dispatch: # Inakuruhusu kuirun mwenyewe ukibonyeza button
   schedule:
-    # Inarun kila baada ya masaa 6 kiotomatiki
-    - cron: '0 */6 * * *'
-  workflow_dispatch: # Inakuruhusu kuirun mwenyewe muda wowote ukitaka
+    - cron: '0 */6 * * *' # Inarun kiotomatiki kila baada ya masaa 6
 
 jobs:
   crawl:
@@ -29,4 +28,4 @@ jobs:
           TURSO_URL: ${{ secrets.TURSO_URL }}
           TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
         run: |
-          python crawler.py crawl --max-pages 1000 --workers 10 --any-domain
+          python crawler.py crawl
