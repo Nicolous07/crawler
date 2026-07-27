@@ -1,0 +1,32 @@
+name: Run Global Crawler
+
+on:
+  schedule:
+    # Inarun kila baada ya masaa 6 kiotomatiki
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Inakuruhusu kuirun mwenyewe muda wowote ukitaka
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install libsql-experimental
+
+      - name: Run Crawler
+        env:
+          TURSO_URL: ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+        run: |
+          python crawler.py crawl --max-pages 1000 --workers 10 --any-domain
