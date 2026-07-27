@@ -1,19 +1,19 @@
-name: Run Global Crawler
+name: Continuous 24/7 Global Crawler
 
 on:
-  workflow_dispatch: # Inakuruhusu kuirun mwenyewe ukibonyeza button
+  workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *' # Inarun kiotomatiki kila baada ya masaa 6
+    - cron: '*/15 * * * *' # Inakagua kila baada ya dakika 15 kuhakikisha haijastop
 
 jobs:
   crawl:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -21,11 +21,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install libsql-experimental
+          pip install libsql-experimental requests
 
-      - name: Run Crawler
+      - name: Run Crawler Non-Stop
         env:
           TURSO_URL: ${{ secrets.TURSO_URL }}
           TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
         run: |
-          python crawler.py crawl
+          # Tunaiambia icrawl peji 200 kwa spidi ya juu
+          python crawler.py crawl --max-pages 200 --workers 15 --any-domain
+
+      - name: Trigger Next Run Automatically
+        if: always() # Hata ikipata error au ikimaliza, itajistua yenyewe tena!
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/crawler.yml/dispatches \
+            -d '{"ref":"main"}'
